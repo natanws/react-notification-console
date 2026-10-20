@@ -28,13 +28,17 @@ async function errorMessage(response: Response): Promise<string> {
 }
 
 export function createApiClient(baseUrl: string) {
-  async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  async function send(path: string, init?: RequestInit): Promise<Response> {
     const response = await fetch(`${baseUrl}${path}`, {
       ...init,
       headers: { 'Content-Type': 'application/json', ...init?.headers },
     });
     if (!response.ok) throw new ApiError(response.status, await errorMessage(response));
-    return (await response.json()) as T;
+    return response;
+  }
+
+  async function request<T>(path: string, init?: RequestInit): Promise<T> {
+    return (await (await send(path, init)).json()) as T;
   }
 
   return {
@@ -47,12 +51,18 @@ export function createApiClient(baseUrl: string) {
 
     retry: (id: string) => request<Notification>(`/notifications/${id}/retry`, { method: 'POST' }),
 
-    create: (idempotencyKey: string, input: CreateNotificationInput) =>
-      request<Notification>('/notifications', {
+    /** `replayed` is true when the API answered 200: the key was already used for this body. */
+    create: async (idempotencyKey: string, input: CreateNotificationInput) => {
+      const response = await send('/notifications', {
         method: 'POST',
         headers: { 'Idempotency-Key': idempotencyKey },
         body: JSON.stringify(input),
-      }),
+      });
+      return {
+        notification: (await response.json()) as Notification,
+        replayed: response.status === 200,
+      };
+    },
   };
 }
 
