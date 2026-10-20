@@ -27,9 +27,11 @@ async function errorMessage(response: Response): Promise<string> {
   return response.statusText || `HTTP ${response.status}`;
 }
 
-export function createApiClient(baseUrl: string) {
+export type Fetcher = (input: string, init?: RequestInit) => Promise<Response>;
+
+export function createApiClient(baseUrl: string, fetcher: Fetcher = (i, init) => fetch(i, init)) {
   async function send(path: string, init?: RequestInit): Promise<Response> {
-    const response = await fetch(`${baseUrl}${path}`, {
+    const response = await fetcher(`${baseUrl}${path}`, {
       ...init,
       headers: { 'Content-Type': 'application/json', ...init?.headers },
     });
@@ -68,4 +70,13 @@ export function createApiClient(baseUrl: string) {
 
 export type ApiClient = ReturnType<typeof createApiClient>;
 
-export const api = createApiClient(import.meta.env.VITE_API_URL ?? 'http://localhost:3000');
+export const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+
+let transport: Fetcher = (input, init) => fetch(input, init);
+
+/** Swaps the HTTP transport, e.g. for the in-browser demo backend. */
+export function setTransport(fetcher: Fetcher): void {
+  transport = fetcher;
+}
+
+export const api = createApiClient(API_URL, (input, init) => transport(input, init));
