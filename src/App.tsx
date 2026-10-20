@@ -6,6 +6,12 @@ import { SendNotificationPage } from './pages/SendNotificationPage';
 export default function App() {
   return (
     <div className="app">
+      {import.meta.env.VITE_DEMO === 'true' && (
+        <p className="demo-banner" role="note">
+          Demo mode: the API is simulated in your browser and resets on reload. Recipients
+          containing &quot;fail&quot; act like a broken receiver until you retry them.
+        </p>
+      )}
       <header className="header">
         <Link to="/" className="brand">
           Notification Console

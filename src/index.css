@@ -293,3 +293,13 @@ a {
 .row input {
   flex: 1;
 }
+
+.demo-banner {
+  background: var(--surface);
+  border: 1px dashed var(--accent);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 16px;
+}

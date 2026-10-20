@@ -14,9 +14,7 @@ export function createDb(): MockDb {
   return { notifications: new Map(), attempts: new Map(), idempotency: new Map() };
 }
 
-let counter = 0;
-const uuid = () => `00000000-0000-4000-8000-${String(++counter).padStart(12, '0')}` as const;
-
+const uuid = () => crypto.randomUUID();
 export function insertNotification(db: MockDb, partial: Partial<Notification> = {}): Notification {
   const now = new Date().toISOString();
   const notification: Notification = {
